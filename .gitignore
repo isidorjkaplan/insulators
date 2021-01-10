@@ -1,3 +1,10 @@
+#Stuff for me to add
+local/
+data/*png
+data/*jpg
+
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
