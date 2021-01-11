@@ -126,7 +126,7 @@ if __name__ == "__main__":
     parser.add_argument('--epoch', default=300, help='The number of epoches to run')
     parser.add_argument('--steps_per_epoch', default=5, help='The number of training entries to be included in each epoch (note we artificially extend our dataset)')
     parser.add_argument('--batch_size', default=3, help='Not really sure what this does')
-    parser.add_argument('--net_file', default='data/network.h5', help='What is the file to store the resulting neural network')
+    parser.add_argument('--net_file', default='data/heatmap.h5', help='What is the file to store the resulting neural network')
     parser.add_argument('--lr', default=0.001, help='The learning rate for the neural network')
     parser.add_argument('--width', default=32*4, help='The width and height of the images for processing')
     parser.add_argument('--load', default=False, action='store_true', help='Set flag to enable loading an existing neural network')
