@@ -32,13 +32,17 @@ def crop_individually(model):
     for i in range(len(out)):
         im = Image.open(args.tmp_folder + '/' + files[i])
         path = args.output + '/' + files[i]
+        #print(np.mean(out[i]))
         if np.mean(out[i]) > args.existance_cutoff:
             insulator_num = 1
             for top,bottom in get_individual_bounds(out[i]):
-                bound = (0,top,1,bottom)
+                bound = (0,np.clip(float(top) - args.indv_buffer,0,1),
+                            1,np.clip(float(bottom) + args.indv_buffer,0,1))
+                #TODO, set left and right bounds as well
                 width, height = im.size
-                region = (bound[0]*width, bound[1]*height, bound[2]*width, bound[3]*height)
-                im.crop(region).save(path[:-4] + insulator_num + path[-3:])
+                region = (int(bound[0]*width), int(bound[1]*height), int(bound[2]*width), int(bound[3]*height))
+                #TODO ensure that the insulators are valid by checking the average pixel value
+                im.crop(region).save(path[:-4] + str(insulator_num) + '.jpg')
         else:
             im.save(path.replace('unsorted', 'error'))
     
@@ -55,7 +59,7 @@ def get_individual_bounds(heatmap):
             row = i
         if rows[i] < args.crop_cutoff and detected:
             detected = False
-            arr.append((row,i))
+            arr.append((row/args.width,i/args.width))
     return arr
 
 
@@ -146,8 +150,9 @@ if __name__ == "__main__":
     parser.add_argument('--cutoff', type=float,default=0.1, help='This is the percentage of insulator pixels on the left or right that must be contained within the insulator')
     parser.add_argument('--buffer', type=float, default=0.2, help='This is a buffer surrounding the identified insulator crop box as a percentage')
     parser.add_argument('--zoom_iter', type=int,default=3, help='Number of itterations of zooming on the insulator before we stop zooming')
-    parser.add_argument('--crop_cutoff',type=float, default=0.5, help='Average pixel value in a row for cutoff when individually cropping')
-    parser.add_argument('--existance_cutoff', type=float,default=0.5, help='Average probability-pixel value for existance of insulators')
+    parser.add_argument('--crop_cutoff',type=float, default=0.8, help='Average pixel value in a row for cutoff when individually cropping')
+    parser.add_argument('--existance_cutoff', type=float,default=0.1, help='Average probability-pixel value for existance of insulators')
+    parser.add_argument('--indv_buffer', type=float, default=0.2, help='Buffer for when cropping individual insulators')
     times = {'heatmap':0, 'crop':0}
     #Parse the args
     args = parser.parse_args()
