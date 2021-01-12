@@ -56,6 +56,7 @@ def get_individual_bounds(heatmap):
     detected = False
     row = 0
     for i in range(len(rows)):
+        #TODO ensure that it is not just a fluke lucky row by looking at the avg of the past few rows
         if rows[i] > args.crop_cutoff and not detected:
             detected = True
             row = i
@@ -154,7 +155,7 @@ if __name__ == "__main__":
     parser.add_argument('--zoom_iter', type=int,default=3, help='Number of itterations of zooming on the insulator before we stop zooming')
     parser.add_argument('--crop_cutoff',type=float, default=0.8, help='Average pixel value in a row for cutoff when individually cropping')
     parser.add_argument('--existance_cutoff', type=float,default=0.1, help='Average probability-pixel value for existance of insulators')
-    parser.add_argument('--indv_buffer', type=float, default=0.2, help='Buffer for when cropping individual insulators')
+    parser.add_argument('--indv_buffer', type=float, default=0.4, help='Buffer for when cropping individual insulators')
     times = {'heatmap':0, 'crop':0}
     #Parse the args
     args = parser.parse_args()
