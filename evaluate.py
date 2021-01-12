@@ -36,8 +36,10 @@ def crop_individually(model):
         if np.mean(out[i]) > args.existance_cutoff:
             insulator_num = 1
             for top,bottom in get_individual_bounds(out[i]):
-                bound = (0,np.clip(float(top) - args.indv_buffer,0,1),
-                            1,np.clip(float(bottom) + args.indv_buffer,0,1))
+                height = bottom-top
+                buffer = height*args.indv_buffer
+                bound = (0,np.clip(top - buffer,0,1),
+                            1,np.clip(bottom + buffer,0,1))
                 #TODO, set left and right bounds as well
                 width, height = im.size
                 region = (int(bound[0]*width), int(bound[1]*height), int(bound[2]*width), int(bound[3]*height))
