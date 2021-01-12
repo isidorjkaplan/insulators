@@ -2,6 +2,7 @@ from keras.optimizers import Adam
 from segmentation_models import Unet
 from keras.preprocessing.image import ImageDataGenerator
 from PIL import Image
+import shutil
 import matplotlib.pyplot as plt
 import scipy.misc
 import numpy as np
@@ -19,10 +20,44 @@ def main():
     #Clone our database to a version we can tinker with
     copy_tree(args.input, args.tmp_folder)
     #Define the image loader to read in the images from our file
-    for i in range(5):#TODO set a proper number of itterations
+    for i in range(args.zoom_iter):
         itterate(model)
         print(str(i) + ': ' + str(times))
-    pass
+    crop_individually(model)
+    shutil.rmtree(args.tmp_folder)
+
+def crop_individually(model):
+    img, _, files = get_data()
+    out = model.predict(img)
+    for i in range(len(out)):
+        im = Image.open(args.tmp_folder + '/' + files[i])
+        path = args.output + '/' + files[i]
+        if np.mean(out[i]) > args.existance_cutoff:
+            insulator_num = 1
+            for top,bottom in get_individual_bounds(out[i]):
+                bound = (0,top,1,bottom)
+                width, height = im.size
+                region = (bound[0]*width, bound[1]*height, bound[2]*width, bound[3]*height)
+                im.crop(region).save(path[:-4] + insulator_num + path[-3:])
+        else:
+            im.save(path.replace('unsorted', 'error'))
+    
+
+def get_individual_bounds(heatmap):
+    probs = np.array(heatmap)
+    rows = np.mean(probs,axis=1)
+    arr = []
+    detected = False
+    row = 0
+    for i in range(len(rows)):
+        if rows[i] > args.crop_cutoff and not detected:
+            detected = True
+            row = i
+        if rows[i] < args.crop_cutoff and detected:
+            detected = False
+            arr.append((row,i))
+    return arr
+
 
 def itterate(model):
     img, _, files = get_data()
@@ -30,10 +65,10 @@ def itterate(model):
     times['heatmap'] = time.process_time()
     out = model.predict(img)
     times['heatmap'] = time.process_time() - times['heatmap']
-    for i in range(len(out)):
+    #for i in range(len(out)):
         #As a temporary measure
-        mask_image = Image.fromarray((out[i].reshape((args.width, args.width)) * 255).astype(np.uint8))
-        mask_image.save('data/tmp_out/' + files[i])
+    #    mask_image = Image.fromarray((out[i].reshape((args.width, args.width)) * 255).astype(np.uint8))
+    #    mask_image.save('data/tmp_out/' + files[i])
 
     times['crop'] = time.process_time()
     crop_images(files, [get_bounds(out[i]) for i in range(len(out))])
@@ -50,22 +85,21 @@ def crop_images(files, bounds):
         region = (bound[0]*width, bound[1]*height, bound[2]*width, bound[3]*height)
         im = im.crop(region) 
         im.save(path)
-    pass
 
-def find_subarray(arr, cutoff=0.1):
+def find_subarray(arr):
     sum_arr = np.cumsum(arr)
     sum_arr = sum_arr / sum_arr[-1]
     for i in range(len(arr)):
-        if sum_arr[i] < cutoff:
+        if sum_arr[i] < args.cutoff:
             left = i
-        if sum_arr[i] < 1 - cutoff:
+        if sum_arr[i] < 1 - args.cutoff:
             right = i
     return (left,right)
             
 
 
 
-def get_bounds(heatmap, buffer=0.2):
+def get_bounds(heatmap):
     #left=top=0.1
     #right=bottom=0.9
     #TODO actually compute the bounds. This is the complicated part
@@ -76,10 +110,10 @@ def get_bounds(heatmap, buffer=0.2):
     left,right = find_subarray(cols)
     top,bottom = find_subarray(rows)
     #Note, bounds must be returned as a number from 0 to 1, it is a percentage
-    top = np.clip(top/args.width - buffer, 0, 1)
-    bottom = np.clip(bottom/args.width + buffer,0,1)
-    left = np.clip(left/args.width - buffer,0,1)
-    right = np.clip(right/args.width + buffer,0,1)
+    top = np.clip(top/args.width - args.buffer, 0, 1)
+    bottom = np.clip(bottom/args.width + args.buffer,0,1)
+    left = np.clip(left/args.width - args.buffer,0,1)
+    right = np.clip(right/args.width + args.buffer,0,1)
     #clip
     return (left,top,right,bottom)
 
@@ -107,7 +141,13 @@ if __name__ == "__main__":
     parser.add_argument('--input', default='data/images', help='A folder with a bunch of unsorted insulators that the program will run on')
     parser.add_argument('--masks', default='data/masks', help='A folder where we will store the output masks for each input image')
     parser.add_argument('--tmp_folder', default='data/tmp', help='A folder we will use to tinker with temporary data')
-    parser.add_argument('--width', default=32*4, help='The width and height of the images for processing')
+    parser.add_argument('--output', default='data/output', help='Output data folder with cropped insulators')
+    parser.add_argument('--width', type=int,default=32*4, help='The width and height of the images for processing')
+    parser.add_argument('--cutoff', type=float,default=0.1, help='This is the percentage of insulator pixels on the left or right that must be contained within the insulator')
+    parser.add_argument('--buffer', type=float, default=0.2, help='This is a buffer surrounding the identified insulator crop box as a percentage')
+    parser.add_argument('--zoom_iter', type=int,default=3, help='Number of itterations of zooming on the insulator before we stop zooming')
+    parser.add_argument('--crop_cutoff',type=float, default=0.5, help='Average pixel value in a row for cutoff when individually cropping')
+    parser.add_argument('--existance_cutoff', type=float,default=0.5, help='Average probability-pixel value for existance of insulators')
     times = {'heatmap':0, 'crop':0}
     #Parse the args
     args = parser.parse_args()
