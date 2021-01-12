@@ -45,6 +45,7 @@ def crop_individually(model):
                 region = (int(bound[0]*width), int(bound[1]*height), int(bound[2]*width), int(bound[3]*height))
                 #TODO ensure that the insulators are valid by checking the average pixel value
                 im.crop(region).save(path[:-4] + str(insulator_num) + '.jpg')
+                insulator_num += 1
         else:
             im.save(path.replace('unsorted', 'error'))
     
@@ -72,11 +73,7 @@ def itterate(model):
     times['heatmap'] = time.process_time()
     out = model.predict(img)
     times['heatmap'] = time.process_time() - times['heatmap']
-    #for i in range(len(out)):
-        #As a temporary measure
-    #    mask_image = Image.fromarray((out[i].reshape((args.width, args.width)) * 255).astype(np.uint8))
-    #    mask_image.save('data/tmp_out/' + files[i])
-
+    for i in range(len(out)):Image.fromarray((out[i].reshape((args.width, args.width)) * 255).astype(np.uint8)).save('data/tmp_out/' + files[i])
     times['crop'] = time.process_time()
     crop_images(files, [get_bounds(out[i]) for i in range(len(out))])
     times['crop'] = time.process_time() - times['crop']
@@ -146,14 +143,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--net_file', default='data/heatmap.h5', help='What is the file to store the resulting neural network')
     parser.add_argument('--input', default='data/images', help='A folder with a bunch of unsorted insulators that the program will run on')
-    parser.add_argument('--masks', default='data/masks', help='A folder where we will store the output masks for each input image')
     parser.add_argument('--tmp_folder', default='data/tmp', help='A folder we will use to tinker with temporary data')
     parser.add_argument('--output', default='data/output', help='Output data folder with cropped insulators')
     parser.add_argument('--width', type=int,default=32*4, help='The width and height of the images for processing')
-    parser.add_argument('--cutoff', type=float,default=0.1, help='This is the percentage of insulator pixels on the left or right that must be contained within the insulator')
+    parser.add_argument('--cutoff', type=float,default=0.2, help='This is the percentage of insulator pixels on the left or right that must be contained within the insulator')
     parser.add_argument('--buffer', type=float, default=0.2, help='This is a buffer surrounding the identified insulator crop box as a percentage')
-    parser.add_argument('--zoom_iter', type=int,default=3, help='Number of itterations of zooming on the insulator before we stop zooming')
-    parser.add_argument('--crop_cutoff',type=float, default=0.8, help='Average pixel value in a row for cutoff when individually cropping')
+    parser.add_argument('--zoom_iter', type=int,default=5, help='Number of itterations of zooming on the insulator before we stop zooming')
+    parser.add_argument('--crop_cutoff',type=float, default=0.1, help='Average pixel value in a row for cutoff when individually cropping')
     parser.add_argument('--existance_cutoff', type=float,default=0.1, help='Average probability-pixel value for existance of insulators')
     parser.add_argument('--indv_buffer', type=float, default=0.4, help='Buffer for when cropping individual insulators')
     times = {'heatmap':0, 'crop':0}
