@@ -2,7 +2,8 @@
 local/
 data/*png
 data/*jpg
-
+*DS_Store
+data/tmp*
 
 
 # Byte-compiled / optimized / DLL files
