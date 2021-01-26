@@ -1,3 +1,6 @@
+import keras
+import keras.utils
+import keras.utils.generic_utils
 from keras.optimizers import Adam
 from segmentation_models import Unet
 from keras.preprocessing.image import ImageDataGenerator
@@ -48,7 +51,7 @@ def crop_individually(model):
                 insulator_num += 1
         else:
             im.save(path.replace('unsorted', 'error'))
-    
+
 
 def get_individual_bounds(heatmap):
     probs = np.array(heatmap)
@@ -87,19 +90,22 @@ def crop_images(files, bounds):
         im = Image.open(path)
         width, height = im.size
         region = (bound[0]*width, bound[1]*height, bound[2]*width, bound[3]*height)
-        im = im.crop(region) 
+        im = im.crop(region)
         im.save(path)
 
 def find_subarray(arr):
     sum_arr = np.cumsum(arr)
     sum_arr = sum_arr / sum_arr[-1]
+    left = 0
+    right = 1
     for i in range(len(arr)):
-        if sum_arr[i] < args.cutoff:
+        if sum_arr[i] <= args.cutoff:
             left = i
-        if sum_arr[i] < 1 - args.cutoff:
+        if sum_arr[i] <= 1 - args.cutoff:
             right = i
+
     return (left,right)
-            
+
 
 
 
@@ -128,7 +134,7 @@ def get_data():
     gen = data_gen.flow_from_directory(
         args.tmp_folder,
         batch_size=batch_size, target_size=(args.width,args.width), class_mode='binary', seed=1, shuffle=False)
-    
+
     img, labels = gen.next()
     files = gen.filenames
     return (img, labels, files)
@@ -146,12 +152,12 @@ if __name__ == "__main__":
     parser.add_argument('--tmp_folder', default='data/tmp', help='A folder we will use to tinker with temporary data')
     parser.add_argument('--output', default='data/output', help='Output data folder with cropped insulators')
     parser.add_argument('--width', type=int,default=32*4, help='The width and height of the images for processing')
-    parser.add_argument('--cutoff', type=float,default=0.2, help='This is the percentage of insulator pixels on the left or right that must be contained within the insulator')
+    parser.add_argument('--cutoff', type=float,default=0.1, help='This is the percentage of insulator pixels on the left or right that must be contained within the insulator')
     parser.add_argument('--buffer', type=float, default=0.2, help='This is a buffer surrounding the identified insulator crop box as a percentage')
-    parser.add_argument('--zoom_iter', type=int,default=5, help='Number of itterations of zooming on the insulator before we stop zooming')
-    parser.add_argument('--crop_cutoff',type=float, default=0.1, help='Average pixel value in a row for cutoff when individually cropping')
-    parser.add_argument('--existance_cutoff', type=float,default=0.1, help='Average probability-pixel value for existance of insulators')
-    parser.add_argument('--indv_buffer', type=float, default=0.4, help='Buffer for when cropping individual insulators')
+    parser.add_argument('--zoom_iter', type=int,default=3, help='Number of itterations of zooming on the insulator before we stop zooming')
+    parser.add_argument('--crop_cutoff',type=float, default=0.05, help='Average pixel value in a row for cutoff when individually cropping')
+    parser.add_argument('--existance_cutoff', type=float,default=0.2, help='Average probability-pixel value for existance of insulators')
+    parser.add_argument('--indv_buffer', type=float, default=0.2, help='Buffer for when cropping individual insulators')
     times = {'heatmap':0, 'crop':0}
     #Parse the args
     args = parser.parse_args()

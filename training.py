@@ -5,7 +5,11 @@ import numpy as np
 import scipy.misc
 import os
 import argparse
+import keras
+import keras.utils
+import keras.utils.generic_utils
 
+import segmentation_models
 from segmentation_models import Unet
 from segmentation_models import get_preprocessing
 from segmentation_models.losses import bce_jaccard_loss
@@ -50,9 +54,9 @@ def train():
     #Display the model pre-training
     model.summary()
     #Train the model and save it's history
-    history = model.fit_generator(train_generator,steps_per_epoch=args.steps_per_epoch, epochs=args.epoch)
+    history = model.fit(train_generator,steps_per_epoch=args.steps_per_epoch, epochs=args.epoch)
     #Save the model weights
-    model.save_weights(net_file)
+    model.save_weights(args.net_file)
     #Print the history as a graph
     plotHistory(history)
     if args.display:
@@ -61,13 +65,23 @@ def train():
 
 def plotHistory(history):
     # Plot history: MSE
-    plt.plot(history.history['iou_score'], label='Score (testing data)')
+    plt.plot(history.history['iou_score'], label='Training IOU Score')
     #plt.plot(history.history['val_iou_score'], label='Score (validation data)')
     plt.title('Accuracy on segmenting insulators')
     plt.ylabel('IOU Score')
     plt.xlabel('No. epoch')
     plt.legend(loc="upper left")
     plt.show()
+    
+    # Plot history: MSE
+    plt.plot(history.history['loss'], label='Training Loss')
+    #plt.plot(history.history['val_loss'], label='Score (validation data)')
+    plt.title('Loss at segmenting insulators')
+    plt.ylabel('Loss')
+    plt.xlabel('No. epoch')
+    plt.legend(loc="upper left")
+    plt.show()
+    
 
 def display(train_generator, model):
     N = 5
@@ -87,7 +101,7 @@ def download_dataset(folder):
     os.system("find " + folder + " -name '*.jpg' -delete")
     os.system("find " + folder + " -name '*.png' -delete")
     print("Deleted old files")
-    #Some images have multiple insulators, we need to give them names, we use letters of the alphabet 
+    #Some images have multiple insulators, we need to give them names, we use letters of the alphabet
     masks = ['a','b','c', 'd', 'e', 'f']
     with open('data/data.json') as f:
         data = json.load(f)
@@ -114,21 +128,21 @@ def download_dataset(folder):
                 arr = arr + np.asarray(img)
         img = Image.fromarray(arr)
         img.save(folder + '/masks/files/image' + str(i) + '.png')
-        #Increment i 
+        #Increment i
         i = i+1
-    
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--download', default=False, action='store_true', help='Enter to re-download the dataset')
     parser.add_argument('--folder', default='data/heatmap', help='Enter the folder for dataset training')
     #Neural network arguments
-    parser.add_argument('--epoch', default=300, help='The number of epoches to run')
-    parser.add_argument('--steps_per_epoch', default=5, help='The number of training entries to be included in each epoch (note we artificially extend our dataset)')
-    parser.add_argument('--batch_size', default=3, help='Not really sure what this does')
+    parser.add_argument('--epoch', type=int, default=300, help='The number of epoches to run')
+    parser.add_argument('--steps_per_epoch', type=int, default=5, help='The number of training entries to be included in each epoch (note we artificially extend our dataset)')
+    parser.add_argument('--batch_size', type=int,default=3, help='Not really sure what this does')
     parser.add_argument('--net_file', default='data/heatmap.h5', help='What is the file to store the resulting neural network')
-    parser.add_argument('--lr', default=0.001, help='The learning rate for the neural network')
-    parser.add_argument('--width', default=32*4, help='The width and height of the images for processing')
+    parser.add_argument('--lr', type=float,default=0.001, help='The learning rate for the neural network')
+    parser.add_argument('--width', type=int,default=32*4, help='The width and height of the images for processing')
     parser.add_argument('--load', default=False, action='store_true', help='Set flag to enable loading an existing neural network')
     #Misc args
     parser.add_argument('--display', default=False, action='store_true', help='True to display the values')
