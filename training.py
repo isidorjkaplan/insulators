@@ -18,6 +18,7 @@ from keras.preprocessing.image import ImageDataGenerator
 import matplotlib.pyplot as plt
 from keras.optimizers import Adam
 import os
+import pandas as pd
 import numpy as np
 from PIL import Image
 
@@ -70,6 +71,10 @@ def train():
     model.save_weights(args.net_file)
     #Print the history as a graph
     plotHistory(history)
+    # convert the history.history dict to a pandas DataFrame:     	
+    hist_df = pd.DataFrame(history.history) 
+    with open(args.history_file, mode='w') as f:
+        hist_df.to_csv(f)
     if args.display:
         display(train_generator,model)
 
@@ -152,8 +157,9 @@ if __name__ == "__main__":
     parser.add_argument('--steps_per_epoch', type=int, default=5, help='The number of training steps to run during each epoch')
     parser.add_argument('--batch_size', type=int,default=3, help='The number of images to be included per training step')
     parser.add_argument('--net_file', default='data/heatmap.h5', help='What is the file to store the resulting neural network')
+    parser.add_argument('--history_file', default='data/history.csv', help='The training history of the neural network')
     parser.add_argument('--lr', type=float,default=0.001, help='The learning rate for the neural network')
-    parser.add_argument('--val_split', type=float , default=0.2, help='The validation split for the dataset')
+    parser.add_argument('--val_split', type=float , default=0.1, help='The validation split for the dataset')
     parser.add_argument('--val_samples', type=int , default=5, help='The number of validation samples to show each epoch')
     parser.add_argument('--width', type=int,default=32*4, help='The width and height of the images for processing')
     parser.add_argument('--load', default=False, action='store_true', help='Set flag to enable loading an existing neural network')
