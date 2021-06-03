@@ -26,6 +26,7 @@ def main():
     for i in range(args.zoom_iter):
         itterate(model)
         print(str(i) + ': ' + str(times))
+    
     crop_individually(model)
     shutil.rmtree(args.tmp_folder)
 
@@ -158,6 +159,7 @@ if __name__ == "__main__":
     parser.add_argument('--crop_cutoff',type=float, default=0.05, help='Average pixel value in a row for cutoff when individually cropping')
     parser.add_argument('--existance_cutoff', type=float,default=0.2, help='Average probability-pixel value for existance of insulators')
     parser.add_argument('--indv_buffer', type=float, default=0.2, help='Buffer for when cropping individual insulators')
+    parser.add_argument('--crop_indv', default=False, action='store_true', help='Individually crop the insulators: experimental')
     times = {'heatmap':0, 'crop':0}
     #Parse the args
     args = parser.parse_args()
