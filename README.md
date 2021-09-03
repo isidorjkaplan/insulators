@@ -4,7 +4,7 @@ This is a cleaned up version of the work I did in First Year with some expansion
 It consists of two major programs, one is `training.py` which trains the segmentation network and `evaluate.py` which uses the segmentation network to zoom in on the insulators in an image and then crop it. Instructions to use are below
 
 # Previous Work
-This is largely a re-write of the methods I developed here for this school project: https://drive.google.com/drive/folders/1eo921wmhM_IzIW2rwQB6KsL1IWCUyogo?usp=sharing  
+This is largely an extention of the methods I developed here for this school project: https://drive.google.com/drive/folders/1eo921wmhM_IzIW2rwQB6KsL1IWCUyogo?usp=sharing  
 
 # Setup
 ## Python Enviornment Setup
