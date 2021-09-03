@@ -1,3 +1,11 @@
+# Research Paper 
+This work was used in the reseach paper:
+```
+Hybrid Algorithm Based on Machine Learning and Deep Learning to Identify Ceramic Insulators and Detect Physical Damages,   
+Youssef El Haj, Ruth Milman, Isidor Kaplan, Ali Ashasi. CEIDP 2021 (Accepted)
+```
+The research paper itself can be found in this repository [here](https://github.com/isidorjkaplan/insulators/blob/main/Hybrid%20Algorithm%20Based%20on%20Machine%20Learning%20and%20Deep%20Learning%20to%20Identify%20Ceramic%20Insulators%20and%20Detect%20Physical%20Damages.pdf) 
+
 # Insulators
 This is a cleaned up version of the work I did in First Year with some expansions to the features
 
